@@ -1,5 +1,6 @@
 package com.assignment.viaplaymusicservice.service;
 
+import com.assignment.viaplaymusicservice.client.CoverArtClient;
 import com.assignment.viaplaymusicservice.client.DiscogClient;
 import com.assignment.viaplaymusicservice.client.MusicBrainzClient;
 import com.assignment.viaplaymusicservice.dto.*;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ViaplayAlbumService {
@@ -17,12 +19,15 @@ public class ViaplayAlbumService {
 
     private final DiscogClient discogClient;
 
+    private final CoverArtClient coverArtClient;
+
     private final String apiName;
 
     public ViaplayAlbumService(MusicBrainzClient musicBrainzClient, DiscogClient discogClient,
-                               @Value("${apiName}") String apiName) {
+                               CoverArtClient coverArtClient, @Value("${apiName}") String apiName) {
         this.musicBrainzClient = musicBrainzClient;
         this.discogClient = discogClient;
+        this.coverArtClient = coverArtClient;
         this.apiName = apiName;
     }
 
@@ -30,27 +35,39 @@ public class ViaplayAlbumService {
         ArtistDetailsResponse artistDetailsResponse = new ArtistDetailsResponse();
         ArtistReleaseAlbumResponse artistReleaseAlbumResponse = musicBrainzClient.getArtistDetails(mbId);
 
+        List<Album> albums = enrichArtistAlbumDetails(artistReleaseAlbumResponse);
+        artistDetailsResponse.setAlbums(albums);
+        artistDetailsResponse.setMbId(mbId);
+
+        ArtistRelation artistRelation = getArtistRelation(artistReleaseAlbumResponse.getRelations());
+        String discogId = extractDiscogId(artistRelation);
+        String description = discogClient.getDiscogResponse(discogId).getProfile();
+        artistDetailsResponse.setDescription(description);
+
+        return artistDetailsResponse;
+    }
+
+    private List<Album> enrichArtistAlbumDetails(ArtistReleaseAlbumResponse artistReleaseAlbumResponse) {
         List<ReleaseAlbum> releaseAlbums = artistReleaseAlbumResponse.getReleaseGroups();
         List<Album> albums = new ArrayList<>();
         releaseAlbums.forEach(releaseAlbum -> {
             Album album = new Album();
             album.setId(releaseAlbum.getId());
             album.setTitle(releaseAlbum.getTitle());
+
+            CoverArtResponse coverArtResponse = coverArtClient.getCoverArtResponse(releaseAlbum.getId());
+            Optional<CoverArtImage> coverArtImage = filterCoverArtImage(coverArtResponse);
+            coverArtImage.ifPresent(artImage -> album.setImageUrl(artImage.getImage()));
             albums.add(album);
         });
-        artistDetailsResponse.setAlbums(albums);
+        return albums;
+    }
 
-        artistDetailsResponse.setMbId(mbId);
-
-        ArtistRelation artistRelation = getArtistRelation(artistReleaseAlbumResponse.getRelations());
-
-
-        String discogId = extractDiscogId(artistRelation);
-        String description = discogClient.getDiscogResponse(discogId).getProfile();
-
-        artistDetailsResponse.setDescription(description);
-
-        return artistDetailsResponse;
+    private Optional<CoverArtImage> filterCoverArtImage(CoverArtResponse coverArtResponse) {
+        return coverArtResponse.getImages()
+                .stream()
+                .filter(image -> image.getFront().equals("true"))
+                .findFirst();
     }
 
     private ArtistRelation getArtistRelation(List<ArtistRelation> artistRelations) {
