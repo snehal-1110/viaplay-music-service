@@ -30,6 +30,7 @@ public class MusicBrainzClient {
                         .build())
                 .retrieve()
                 .bodyToMono(ArtistReleaseAlbumResponse.class)
+                .cache()
                 .block();
     }
 }
