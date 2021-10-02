@@ -15,23 +15,23 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 public class SwaggerConfig {
 
-  @Value("${service.version}")
-  private String version;
+    @Value("${service.version}")
+    private String version;
 
-  private ApiInfo apiInfo() {
-    return new ApiInfoBuilder().title("VIAPLAY-MUSIC-SERVICE")
-        .description("Java backend api for music data management")
-        .version(version).build();
-  }
+    private ApiInfo apiInfo() {
+        return new ApiInfoBuilder().title("VIAPLAY-MUSIC-SERVICE")
+                .description("Java backend api for music data management")
+                .version(version).build();
+    }
 
-  @Bean
-  public Docket api() {
-    return new Docket(DocumentationType.SWAGGER_2)
-        .apiInfo(apiInfo())
-        .select()
-        .paths(Predicates.not(PathSelectors.regex("/error.*")))
-        .paths(Predicates.not(PathSelectors.regex("/health.*")))
-        .paths(Predicates.not(PathSelectors.regex("/info.*")))
-        .build();
-  }
+    @Bean
+    public Docket api() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+                .select()
+                .paths(Predicates.not(PathSelectors.regex("/error.*")))
+                .paths(Predicates.not(PathSelectors.regex("/health.*")))
+                .paths(Predicates.not(PathSelectors.regex("/info.*")))
+                .build();
+    }
 }
