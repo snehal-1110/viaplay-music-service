@@ -15,4 +15,7 @@ public class CoverArtResponse {
     @JsonProperty("images")
     private List<CoverArtImage> images;
 
+    @JsonProperty("release")
+    private String releaseUrl;
+
 }
