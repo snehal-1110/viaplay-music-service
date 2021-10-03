@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +16,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class ViaplayAlbumService {
+
     private final MusicBrainzClient musicBrainzClient;
     private final DiscogClient discogClient;
     private final CoverArtClient coverArtClient;
@@ -33,28 +33,32 @@ public class ViaplayAlbumService {
     public ArtistDetailsResponse getArtistDetailsResponse(String mbId) {
         ArtistDetailsResponse artistDetailsResponse = new ArtistDetailsResponse();
         ArtistReleaseAlbumResponse artistReleaseAlbumResponse = musicBrainzClient.getArtistDetails(mbId);
+
         List<Album> albums = enrichArtistAlbumDetails(artistReleaseAlbumResponse);
         artistDetailsResponse.setAlbums(albums);
         artistDetailsResponse.setMbId(mbId);
+
         ArtistRelation artistRelation = getArtistRelation(artistReleaseAlbumResponse.getRelations());
         String discogId = extractDiscogId(artistRelation);
         String description = discogClient.getDiscogResponse(discogId).getProfile();
         artistDetailsResponse.setDescription(description);
+
         return artistDetailsResponse;
     }
 
     private List<Album> enrichArtistAlbumDetails(ArtistReleaseAlbumResponse artistReleaseAlbumResponse) {
         List<ReleaseAlbum> releaseAlbums = artistReleaseAlbumResponse.getReleaseGroups();
         List<Album> albums = new ArrayList<>();
+
         releaseAlbums.forEach(releaseAlbum -> {
             Album album = new Album();
             album.setId(releaseAlbum.getId());
             album.setTitle(releaseAlbum.getTitle());
-            Mono<CoverArtResponse> coverArtResponseMono = coverArtClient.getCoverArtResponse(releaseAlbum.getId());
-            coverArtResponseMono.subscribe(coverArtResponse -> {
-                Optional<CoverArtImage> coverArtImage = coverArtResponse.getImages().stream().findFirst();
-                coverArtImage.ifPresent(artImage -> album.setImageUrl(artImage.getImage()));
-            });
+
+            CoverArtResponse coverArtResponse = coverArtClient.getCoverArtResponse(releaseAlbum.getId());
+
+            Optional<CoverArtImage> coverArtImage = coverArtResponse.getImages().stream().findFirst();
+            coverArtImage.ifPresent(artImage -> album.setImageUrl(artImage.getImage()));
             albums.add(album);
         });
         return albums;
@@ -70,4 +74,5 @@ public class ViaplayAlbumService {
     private String extractDiscogId(ArtistRelation artistRelation) {
         return StringUtils.substringAfterLast(artistRelation.getResourceUrl().getRelationResource(), "/");
     }
+
 }
