@@ -3,8 +3,8 @@
 
 This is a REST API which  provides the clients with information about a specific music artist.
 The information is collected from 3 different sources:
-- MusicBrainz
-- Cover Art
+- MusicBrainz 
+- Cover Art Archive
 - Discog
 
 
@@ -13,16 +13,15 @@ The information is collected from 3 different sources:
 - Create Rest API which uses JSON message format
 - API takes a MBID (MusicBrainz Identifier) and return a result containing required information from Discog and Cover Art Archive
 - Displays list of all albums the artist has released from MusicBrainz
-- Displays all links to album cover art corresponding to the albums of the required artist from Cover Art Archive.
-- Displays description of the artist fetched from Discog which is given as input from MusicBrainz response (Discog does not support MBIDs hence we extract the discog id from url given in the MusicBrainz response.)
+- Displays links to album cover art corresponding to the albums of the required artist from Cover Art Archive.
+- Displays description of the artist fetched from Discog which is given as input from MusicBrainz response (Discog does not support MBIDs hence we extract the discog id from url given in the MusicBrainz response.
 
 
 ## Tech
 
-
-
 - [Spring Boot] 
-- [Swagger ui] 
+- [Swagger ui] -  User Interface for endpoints testing or interaction.
+- [Postman]- Endpoints testing or interaction.
 
 ## Installation
 
@@ -40,7 +39,9 @@ Once the application starts locally, Rest API endpoint to get the Artist release
 
 Test Data {MBID}
 - f27ec8db-af05-4f36-916e-3d57f91ecf5e
-- 01809552-4f87-45b0-afff-2c6f0730a3be
+- d5da1841-9bc8-4813-9f89-11098090148e
+- bf24ca37-25f4-4e34-9aec-460b94364cfc
+
 
 ## Sample Response
 {
