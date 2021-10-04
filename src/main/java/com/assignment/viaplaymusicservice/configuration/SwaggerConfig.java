@@ -20,7 +20,7 @@ public class SwaggerConfig {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder().title("VIAPLAY-MUSIC-SERVICE")
-                .description("Java backend api for music data management")
+                .description("Rest API for providing information about specific music artist")
                 .version(version).build();
     }
 

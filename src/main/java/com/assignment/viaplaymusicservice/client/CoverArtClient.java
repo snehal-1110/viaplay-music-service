@@ -16,7 +16,6 @@ public class CoverArtClient {
 
     private final WebClient webClient;
     private final String scheme;
-
     private final String host;
     private final String path;
 

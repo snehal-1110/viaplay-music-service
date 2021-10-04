@@ -4,10 +4,12 @@ import com.assignment.viaplaymusicservice.client.CoverArtClient;
 import com.assignment.viaplaymusicservice.client.DiscogClient;
 import com.assignment.viaplaymusicservice.client.MusicBrainzClient;
 import com.assignment.viaplaymusicservice.dto.*;
+import com.assignment.viaplaymusicservice.exception.ViaplayServiceDataException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,22 +34,27 @@ public class ViaplayAlbumService {
 
     public ArtistDetailsResponse getArtistDetailsResponse(String mbId) {
         ArtistDetailsResponse artistDetailsResponse = new ArtistDetailsResponse();
-        ArtistReleaseAlbumResponse artistReleaseAlbumResponse = musicBrainzClient.getArtistDetails(mbId);
+        MusicBrainzResponse musicBrainzResponse = musicBrainzClient.getArtistDetails(mbId);
 
-        List<Album> albums = enrichArtistAlbumDetails(artistReleaseAlbumResponse);
+        if (ObjectUtils.isEmpty(musicBrainzResponse)) {
+            throw new ViaplayServiceDataException("Music brainz response is empty");
+        }
+
+        List<Album> albums = enrichArtistAlbumDetails(musicBrainzResponse);
         artistDetailsResponse.setAlbums(albums);
         artistDetailsResponse.setMbId(mbId);
 
-        ArtistRelation artistRelation = getArtistRelation(artistReleaseAlbumResponse.getRelations());
+        ArtistRelation artistRelation = findArtistRelation(musicBrainzResponse.getRelations());
         String discogId = extractDiscogId(artistRelation);
-        String description = discogClient.getDiscogResponse(discogId).getProfile();
-        artistDetailsResponse.setDescription(description);
+
+        DiscogResponse discogResponse = discogClient.getDiscogResponse(discogId);
+        artistDetailsResponse.setDescription(discogResponse.getProfile());
 
         return artistDetailsResponse;
     }
 
-    private List<Album> enrichArtistAlbumDetails(ArtistReleaseAlbumResponse artistReleaseAlbumResponse) {
-        List<ReleaseAlbum> releaseAlbums = artistReleaseAlbumResponse.getReleaseGroups();
+    private List<Album> enrichArtistAlbumDetails(MusicBrainzResponse musicBrainzResponse) {
+        List<ReleaseAlbum> releaseAlbums = musicBrainzResponse.getReleaseGroups();
         List<Album> albums = new ArrayList<>();
 
         releaseAlbums.forEach(releaseAlbum -> {
@@ -64,7 +71,7 @@ public class ViaplayAlbumService {
         return albums;
     }
 
-    private ArtistRelation getArtistRelation(List<ArtistRelation> artistRelations) {
+    private ArtistRelation findArtistRelation(List<ArtistRelation> artistRelations) {
         return artistRelations
                 .stream().filter(relation -> relation.getType().equals(apiName))
                 .findFirst()

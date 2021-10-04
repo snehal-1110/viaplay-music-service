@@ -1,6 +1,6 @@
 package com.assignment.viaplaymusicservice.client;
 
-import com.assignment.viaplaymusicservice.dto.ArtistReleaseAlbumResponse;
+import com.assignment.viaplaymusicservice.dto.MusicBrainzResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class MusicBrainzClient {
     this.path = path;
   }
 
-  public ArtistReleaseAlbumResponse getArtistDetails(String mbId) {
+  public MusicBrainzResponse getArtistDetails(String mbId) {
     return webClient.get()
         .uri(uriBuilder -> uriBuilder
             .scheme(scheme)
@@ -35,7 +35,7 @@ public class MusicBrainzClient {
             .queryParam("inc", "url-rels+release-groups")
             .build())
         .retrieve()
-        .bodyToMono(ArtistReleaseAlbumResponse.class)
+        .bodyToMono(MusicBrainzResponse.class)
         .cache()
         .doOnError(error -> log.error("An error has occurred in music brainz client {}", error.getMessage()))
         .block();
